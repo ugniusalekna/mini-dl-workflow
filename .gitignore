@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# System files
+.DS_Store
+
+# Packaging
+*.egg-info/
+
+# Virtual environment
+.venv/
+
+# Project files
+data*/
+logs/
+runs/
