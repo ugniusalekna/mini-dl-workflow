@@ -54,8 +54,8 @@ loss_fn = ...
 
 
 # 4. Set up logging and training utilities
-from mdlw.utils.writer import Writer
-writer = Writer(log_dir='')
+# from mdlw.utils.writer import Writer
+# writer = Writer(log_dir='')
 
 """ TODO: Create instances of Trainer, Validator classes """
 trainer = ...
