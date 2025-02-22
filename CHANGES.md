@@ -24,7 +24,7 @@ Here are the updates I made after the lecture:
 
 - `mdlw/inference.py` was basically rewritten: since onnx was not available for some, i've added a base class `BaseInferenceModel` and then defined two classes for inference -- `TorchInferenceModel` and `ONNXInferenceModel`. This way, now inference (using infer.py now, or test.py before) can be made by providing either `.pt` file (for PyTorch models) or `.onnx` file (for ONNX if it works for you).
 
-- In `scripts/train.py`: defined `scheduler`; added `writer.close()` (line 100, forgot to do that in lecture while coding); added onnx export only if onnx is actually available.
+- In `scripts/train.py`: defined `scheduler`; added `writer.close()` (line 100, forgot to do that in lecture while coding); added onnx export only if onnx is actually available; changed fstring float formatting in set_postfix_str (line 98)
 
 - I've also made some changes to `mdlw/utils/fmaps.py` so just copy paste the whole code
 
