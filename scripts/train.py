@@ -95,7 +95,7 @@ for epoch in pbar:
         best_val_acc = val_acc
         torch.save(model, f"{run_dir}/best_model.pt")
         
-    pbar.set_postfix_str(f"Loss: {train_loss:.2f}, Acc: {train_acc:.2f}; Val Loss: {val_loss:.2f}, Val Acc: {val_acc:.2f}")
+    pbar.set_postfix_str(f"Loss: {train_loss:.4f}, Acc: {train_acc:.2%}; Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2%}")
 
 writer.close()
 print(f"Training completed; Best validation accuracy: {best_val_acc:.2%}")
