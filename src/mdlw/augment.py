@@ -48,12 +48,20 @@ class Augmenter:
         if train:
             """ TODO: Define the training augmentations """
             self.transforms = T.Compose([
-                ...  # Replace with appropriate transformations
+                # Replace with appropriate transformations
+                T.ToTensor(),
+                T.RandomResizedCrop(image_size, scale=(0.9, 1.0)),
+                T.RandomRotation(degrees=10),
+                T.RandomHorizontalFlip(p=0.5),                      # <------ COMMENT OUT for EMNIST
+                T.RandomPerspective(distortion_scale=0.2, p=0.5),
+                T2.GaussianNoise(sigma=0.01),
             ])
         else:
             """ TODO: Define the validation augmentations """
             self.transforms = T.Compose([
-                ...  # Replace with appropriate transformations
+                # Replace with appropriate transformations
+                T.ToTensor(),
+                T.Resize(image_size)
             ])
 
     def __call__(self, img):

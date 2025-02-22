@@ -60,25 +60,15 @@ def build_fc_composite(activation, fc_layers, gridsz, use_act=False):
     return composite
 
 
-def preprocess(image, imgsz, device='cpu'):
-    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-    transform = T.Compose([
-        T.ToTensor(),
-        T.Resize((imgsz, imgsz)),
-    ])
-    
-    return transform(image).to(device)
-
-
-def update_hooks(model, activation, layer_names):
+def update_hooks(net, activation, layer_names):
     found_layers = set()
     
-    for module in model.modules():
+    for module in net.modules():
         if hasattr(module, 'hook_handle'):
             module.hook_handle.remove()
             del module.hook_handle
     
-    for name, module in model.named_modules():
+    for name, module in net.named_modules():
         if name in layer_names:
             module.hook_handle = module.register_forward_hook(get_hook(activation, name))
             found_layers.add(name)

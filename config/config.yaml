@@ -1,0 +1,11 @@
+seed: 42
+num_classes: 10
+image_size: 32
+input_channels: 3
+val_ratio: 0.2
+batch_size: 128
+num_workers: 0
+num_epochs: 10
+learning_rate: 0.01
+data_dir: './data/cifar10'
+log_dir: './runs'

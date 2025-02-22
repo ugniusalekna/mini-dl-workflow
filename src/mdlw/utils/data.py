@@ -14,8 +14,11 @@ def get_image_paths(root_dir, extensions=("jpg", "jpeg", "png")):
 
 
 def read_image(img_path):
-    image = Image.open(img_path).convert("RGB")
-    return np.array(image)
+    image = Image.open(img_path)
+    if image.mode == "L":
+        return np.array(image)[:, :, np.newaxis]
+    else:
+        return np.array(image.convert("RGB"))
 
 
 def get_cls_from_path(img_path):

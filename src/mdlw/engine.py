@@ -47,12 +47,12 @@ class Trainer:
             device (str): Device for computation ('cpu' or 'cuda').
             writer (torch.utils.tensorboard.SummaryWriter, optional): Logger for TensorBoard.
         """
-        self.model = ...
-        self.optimizer = ...
-        self.scheduler = ...
-        self.criterion = ...
-        self.device = ...
-        self.writer = ...
+        self.model = model
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        self.criterion = criterion
+        self.device = device
+        self.writer = writer
 
     def train_epoch(self, dataloader, epoch):
         """
@@ -69,37 +69,37 @@ class Trainer:
         """ TODO: Implement one epoch of the training loop """
         for img_batch, label_batch in tqdm(dataloader, total=len(dataloader), desc=f"Epoch {epoch}", leave=False):
             """ TODO: Move data to the correct device """
-            img_batch = ... 
-            label_batch = ...
+            img_batch = img_batch.to(self.device)
+            label_batch = label_batch.to(self.device)
             
             """ TODO: Zero gradients """
-            ...
+            self.optimizer.zero_grad()
             
             """ TODO: Forward pass through the model """
-            logit_batch = ...
+            logit_batch = self.model(img_batch)
             
             """ TODO: Compute the loss """
-            loss = ...
+            loss = self.criterion(logit_batch, label_batch)
             
             """ TODO: Backpropagate the loss """
-            ...
+            loss.backward()
             
             """ TODO: Update model weights """
-            ...
+            self.optimizer.step()
             
             """ TODO: Update the learning rate scheduler if one is used """
             if self.scheduler:
-                ...
+                self.scheduler.step()
 
             """ TODO: Track loss and accuracy """
-            running_loss += ...
-            pred_batch = ...
-            running_corrects += ...
-            total_samples += ...
+            running_loss += loss.item()
+            pred_batch = torch.argmax(logit_batch, dim=1)
+            running_corrects += (label_batch == pred_batch).sum().item()
+            total_samples += img_batch.shape[0]
 
         """ TODO: Compute average loss and accuracy """
-        avg_loss = ...
-        avg_acc = ...
+        avg_loss = running_loss / total_samples
+        avg_acc = running_corrects / total_samples
         
         """ Log metrics if a writer is available """
         if self.writer:
@@ -128,10 +128,10 @@ class Validator:
             device (str): Device for computation ('cpu' or 'cuda').
             writer (torch.utils.tensorboard.SummaryWriter, optional): Logger for TensorBoard.
         """
-        self.model = ...
-        self.criterion = ...
-        self.device = ...
-        self.writer = ...
+        self.model = model
+        self.criterion = criterion
+        self.device = device
+        self.writer = writer
 
     def validate(self, dataloader, epoch):
         """
@@ -148,24 +148,25 @@ class Validator:
         """ TODO: Implement one epoch of the validation loop """
         for img_batch, label_batch in tqdm(dataloader, total=len(dataloader), desc="Validation", leave=False):
             """ TODO: Move data to the correct device """
-            img_batch = ...
-            label_batch = ...
+            img_batch = img_batch.to(self.device)
+            label_batch = label_batch.to(self.device)
             
             """ TODO: Forward pass through the model without computing gradients! """
-            logit_batch = ...
+            with torch.no_grad():
+                logit_batch = self.model(img_batch)
             
             """ TODO: Compute the loss """
-            loss = ...
+            loss = self.criterion(logit_batch, label_batch)
             
             """ TODO: Track loss and accuracy """
-            running_loss += ...
-            pred_batch = ...
-            running_corrects += ...
-            total_samples += ...
+            running_loss += loss.item()
+            pred_batch = torch.argmax(logit_batch, dim=1)
+            running_corrects += (pred_batch == label_batch).sum().item()
+            total_samples += img_batch.shape[0]
 
         """ TODO: Compute average loss and accuracy """
-        avg_loss = ...
-        avg_acc = ...
+        avg_loss = running_loss / total_samples
+        avg_acc = running_corrects / total_samples
         
         """ Log metrics if a writer is available """
         if self.writer:
@@ -188,7 +189,9 @@ class Exporter:
         """ Export the model to ONNX format. """
         print("Exporting model...")
         self.model.eval()
-        dummy_input = torch.randn(1, 3, self.imgsz, self.imgsz, device=self.device)
+        in_channels = list(self.model.children())[0].in_channels
+        
+        dummy_input = torch.randn(1, in_channels, self.imgsz, self.imgsz, device=self.device)
         torch.onnx.export(
             model=self.model, 
             args=dummy_input, 

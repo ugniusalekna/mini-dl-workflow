@@ -25,6 +25,7 @@ image, label = image_dataset[0]
 
 # Import necessary libraries
 from torch.utils.data import Dataset
+import torchvision.transforms as T
 
 # Import utility functions for image handling
 from .utils.data import get_cls_from_path, read_image
@@ -43,16 +44,16 @@ class ImageDataset(Dataset):
             transform (callable, optional): Transformations to apply to images.
         """
         """ TODO: Store image paths, class mapping, and transformations """
-        self.image_paths = ...
-        self.class_map = ...
-        self.transform = ...
-        
+        self.image_paths = image_paths
+        self.class_map = class_map
+        self.transform = transform if transform else T.ToTensor()
+
     def __len__(self):
         """
         Return the number of images in the dataset.
         """
         """ TODO: Return dataset length """
-        return ...
+        return len(self.image_paths)
 
     def __getitem__(self, idx):
         """
@@ -63,15 +64,15 @@ class ImageDataset(Dataset):
             tuple: (image, label)
         """
         """ TODO: Retrieve image path and class label """
-        img_path = ...
-        cls_name = ...
-        label = ...
+        img_path = self.image_paths[idx]
+        cls_name = get_cls_from_path(img_path)
+        label = self.class_map[cls_name]
         
         """ TODO: Read the image from disk """
-        img = ...
+        img = read_image(img_path)
         
         """ Apply transformations if provided """
         if self.transform:
             img = self.transform(img)
-
+        
         return img, label

@@ -9,14 +9,14 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument('--output_dir', type=str, default='./data')
     p.add_argument('--label', type=str, required=True)
+    p.add_argument('--imgsz', type=int, default=120)
     return p.parse_args()
 
 
 def main():
     args = parse_args()
     input_src = 0
-    resolution = 640
-
+    
     label_dir = os.path.join(args.output_dir, args.label)
     os.makedirs(label_dir, exist_ok=True)
     
@@ -29,14 +29,14 @@ def main():
                 break
             
             frame = crop_square(frame)
-            frame = cv.resize(frame, (resolution, resolution))
-
             display_frame = cv.flip(frame.copy(), 1)
-            draw_text(display_frame, text="Press 'c' to capture, 'q' to quit")
+
+            draw_text(display_frame, text="Press 'c' to capture, 'q' to quit", font_scale=1.0)
             cv.imshow('Data capture', display_frame)
             
             key = cv.waitKey(1) & 0xFF
             if key == ord('c'):
+                frame = cv.resize(frame, (args.imgsz, args.imgsz))
                 fname = os.path.join(label_dir, f"{args.label}_{img_count:05d}.jpg")
                 cv.imwrite(fname, frame)
                 print(f"Captured: {fname}")
