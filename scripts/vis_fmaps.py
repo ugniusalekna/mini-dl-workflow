@@ -15,6 +15,7 @@ def parse_args():
     p.add_argument('--model_path', type=str, required=True)
     p.add_argument('--config_path', type=str, default="./config/config.yaml")
     p.add_argument('--mode', type=str, default='stream', choices=['stream', 'draw'])
+    p.add_argument('--resolution', type=int, default=1080)
     return p.parse_args()
 
 
@@ -34,28 +35,32 @@ def init_model(args):
     return model, layers, fc_layers, activation
 
 
-def process_frame(image, model, layers, fc_layers, activation, current_idx, use_act, flip=True):
+def process_frame(image, model, layers, fc_layers, activation, current_idx, use_act=False, flip=True, frame_size=None):
     proc_img = crop_square(image)
     if flip:
         proc_img = cv.flip(proc_img, 1)
+    if frame_size:
+        proc_img = cv.resize(proc_img, (frame_size, frame_size))
     
     pred, prob = model(proc_img, return_prob=True)
     
     if layers[current_idx] == 'fc_all':
         vis = build_fc_composite(activation, fc_layers, gridsz=proc_img.shape[:2], use_act=use_act)
-        draw_text(vis, text="FC layers" + ('+act' if use_act else ''), pos=(10, 30), font_scale=1.0)
+        draw_text(vis, text="FC layers" + ('+act' if use_act else ''), 
+                  font_scale=frame_size/1080, pos=(10, int(frame_size * 0.05)))
     else:
         feat = activation[layers[current_idx]].squeeze(0)
         grid = cv.resize(build_grid(feat, use_act=use_act), (proc_img.shape[1], proc_img.shape[0]),
                          interpolation=cv.INTER_NEAREST)
         vis = cv.applyColorMap(grid, cv.COLORMAP_VIRIDIS)
-        draw_text(vis, text=layers[current_idx] + ('+act' if use_act else ''), pos=(10, 30), font_scale=1.0)
+        draw_text(vis, text=layers[current_idx] + ('+act' if use_act else ''), 
+                  font_scale=frame_size/1080, pos=(10, int(frame_size * 0.05)))
     
     combined = np.concatenate([proc_img, vis], axis=1)
     return combined, (pred, prob)
 
 
-def run_stream_mode(model, layers, fc_layers, activation):
+def run_stream_mode(model, layers, fc_layers, activation, frame_size=1024):
     current_idx = 0
     use_act = False
     paused = False
@@ -65,10 +70,15 @@ def run_stream_mode(model, layers, fc_layers, activation):
                 ok, frame = cap.read()
                 if not ok:
                     break
-            output, (pred, prob) = process_frame(frame, model, layers, fc_layers, activation, current_idx, use_act)
-            draw_text(output, text="'j','l' change layers, 'k' toggle act, 'space' pause, 'q' quit.", font_scale=1.0)
-            draw_text(output, text=f"Prediction: {pred}; Probability: {prob:.2f}", font_scale=1.0, pos=(10, 80))
+            output, (pred, prob) = process_frame(frame, model, layers, fc_layers, activation, current_idx, 
+                                                 use_act=use_act, frame_size=frame_size)
+            draw_text(output, text="'j','l' change layers, 'k' toggle act, 'space' pause, 'q' quit.", 
+                      font_scale=frame_size/1080, pos=(10, int(frame_size * 0.05)))
+            draw_text(output, text=f"Prediction: {pred}; Probability: {prob:.2f}", 
+                      font_scale=frame_size/1080, pos=(10, int(frame_size * 0.1)))
+            
             cv.imshow("Feature visualization", output)
+            
             key = cv.waitKey(1) & 0xFF
             if key == ord('q'):
                 break
@@ -90,7 +100,7 @@ def run_draw_mode(model, layers, fc_layers, activation, canvas_size=1024):
     canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
     drawing = False
     last_point = None
-    brush_size = 30
+    brush_size = max(1, int(canvas_size / 36))
     erase_mode = False
     current_idx = 0
     use_act = False
@@ -114,12 +124,19 @@ def run_draw_mode(model, layers, fc_layers, activation, canvas_size=1024):
 
     while True:
         frame = canvas.copy()
-        output, (pred, prob) = process_frame(frame, model, layers, fc_layers, activation, current_idx, use_act, flip=False)
-        draw_text(output, text="'j','l' change layers, 'k' toggle act, 'space' pause, 'q' quit;", font_scale=1.0)
-        draw_text(output, text="'c': clear; 'w/s': change brush size; 'e': toggle erase;", font_scale=1.0, pos=(10, 80))
-        draw_text(output, text=f"Prediction: {pred}; Probability: {prob:.2f}", font_scale=1.0, pos=(10, 130))
-        draw_text(output, text=f"Brush size: {brush_size}; Eraser: {'ON' if erase_mode else 'OFF'}", font_scale=1.0, pos=(10, 180))
+        output, (pred, prob) = process_frame(frame, model, layers, fc_layers, activation, current_idx, 
+                                             use_act=use_act, flip=False, frame_size=canvas_size)
+        draw_text(output, text="'j','l' change layers, 'k' toggle act, 'space' pause, 'q' quit;", 
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.05)))
+        draw_text(output, text="'c': clear; 'w/s': change brush size; 'e': toggle erase;",
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.1)))
+        draw_text(output, text=f"Prediction: {pred}; Probability: {prob:.2f}",
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.15)))
+        draw_text(output, text=f"Brush size: {brush_size}; Eraser: {'ON' if erase_mode else 'OFF'}",
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.2)))
+        
         cv.imshow(window_name, output)
+        
         key = cv.waitKey(1) & 0xFF
         if key == ord('q'):
             break
@@ -149,9 +166,9 @@ def main():
     args = parse_args()
     model, layers, fc_layers, activation = init_model(args)
     if args.mode == 'stream':
-        run_stream_mode(model, layers, fc_layers, activation)
+        run_stream_mode(model, layers, fc_layers, activation, frame_size=args.resolution)
     elif args.mode == 'draw':
-        run_draw_mode(model, layers, fc_layers, activation)
+        run_draw_mode(model, layers, fc_layers, activation, canvas_size=args.resolution)
 
 
 if __name__ == '__main__':

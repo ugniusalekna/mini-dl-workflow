@@ -1,5 +1,6 @@
 import os
 import random
+import torch
 import numpy as np
 from PIL import Image
 
@@ -19,6 +20,10 @@ def read_image(img_path):
         return np.array(image)[:, :, np.newaxis]
     else:
         return np.array(image.convert("RGB"))
+
+
+def to_tensor(img):
+    return torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
 
 
 def get_cls_from_path(img_path):

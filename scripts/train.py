@@ -35,11 +35,13 @@ train_dataset = ImageDataset(
     image_paths=train_img_paths, 
     class_map=class_map,
     transform=train_transform,
+    cache_images=cfg.cache_images,
 )
 val_dataset = ImageDataset(
     image_paths=val_img_paths, 
     class_map=class_map,
     transform=val_transform,
+    cache_images=cfg.cache_images,
 )
 
 """ TODO: Initialize instances of DataLoader from torch.utils.data for training and validation datasets """
@@ -82,25 +84,27 @@ validator = Validator(model=model, criterion=loss_fn, device=device, writer=writ
 
 # 5. Training loop
 """ TODO: Iterate through epochs, training and validating the model """
+from tqdm import tqdm
+from mdlw.utils.misc import timer
 
 best_val_acc = 0.0
-
-from tqdm import tqdm
 pbar = tqdm(range(1, cfg.num_epochs + 1), leave=False)
-for epoch in pbar:
-    train_loss, train_acc = trainer.train_epoch(train_loader, epoch=epoch)
-    val_loss, val_acc = validator.validate(val_loader, epoch=epoch)
-    
-    if val_acc > best_val_acc:
-        best_val_acc = val_acc
-        torch.save(model, f"{run_dir}/best_model.pt")
+
+with timer(m="Training completed"):
+    for epoch in pbar:
+        train_loss, train_acc = trainer.train_epoch(train_loader, epoch=epoch)
+        val_loss, val_acc = validator.validate(val_loader, epoch=epoch)
         
-    pbar.set_postfix_str(f"Loss: {train_loss:.4f}, Acc: {train_acc:.2%}; Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2%}")
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            torch.save(model, f"{run_dir}/best_model.pt")
+            
+        pbar.set_postfix_str(f"Loss: {train_loss:.4f}, Acc: {train_acc:.2%}; Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2%}")
 
-writer.close()
-print(f"Training completed; Best validation accuracy: {best_val_acc:.2%}")
+    writer.close()
+
+print(f"Best validation accuracy: {best_val_acc:.2%}")
 print(f"Model saved at: {run_dir}/best_model.pt")
-
 
 # 6. Exporting trained model to ONNX format
 """ TODO: Setup ONNX export """

@@ -41,3 +41,22 @@ Here are the updates I made after the lecture:
 - I think thats all, but i may have skipped something, so inspect the code if interested or if any errors occur.
 
 > NOTE: I have this script `scripts/collect_images.py`, made it to collect images with a webcam, in order to train a model on your own data. Feel free to try it out, i've tried to train a classifier to recognize rock paper scissors.
+
+
+> NOTE: Did some more changes since there were bugs etc.
+
+- modified `scripts/infer.py`, added `resolution` argument to cli args to change cv window size (since for some resizing with dragging a corner did not work). Due to this added resizing, added cv.resize call in relevant functions, also made text scaling and position be relative to imgsz, since now the size is not fixed but specified by the user. 
+
+- same changes were made to `scripts/vis_fmaps.py`
+
+- added a `timer` context manager in `scripts/train.py` to see elapsed time of training. About context managers in python: https://www.geeksforgeeks.org/context-manager-in-python/. also added cache_images argument to `ImageDataset` call to flag image caching to RAM instead of reading from disk.
+
+- added `cache_images` arg to `config/config.yaml`
+
+- modified `ImageDataset` to cache images to RAM if `cache_images` flag is true. also added to_tensor method instead of using T.ToTensor(), since its a little faster, when no transform is suppled to dataset.
+
+- removed `ToTensor()` transformations in `Augmenter` in `mdlw/augment.py`, since now i use `to_tensor` func from `mdlw/utils/data.py`
+
+- added `to_tensor` func to `mdlw/utils/data.py`
+
+- added `timer` context manager to `mdlw/utils/misc.py`

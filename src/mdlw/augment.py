@@ -10,7 +10,6 @@ Helpful Resources:
 - Torchvision v2 Transforms Docs: https://pytorch.org/vision/stable/transforms_v2.html
 
 Some Transformations:
-- T.ToTensor(): Converts a PIL image or numpy array to a PyTorch tensor and NORMALIZES it.
 - T.Resize(size): Resizes the image to the given size.
 - T.RandomResizedCrop(size, scale): Randomly crops and resizes the image.,
 - T.RandomHorizontalFlip(p): Flips the image horizontally with probability p.
@@ -29,8 +28,7 @@ example_transform = T.Compose([
 """
 
 # Import necessary libraries for transformations
-import torchvision.transforms as T
-import torchvision.transforms.v2 as T2
+import torchvision.transforms.v2 as T
 
 
 class Augmenter:
@@ -49,18 +47,16 @@ class Augmenter:
             """ TODO: Define the training augmentations """
             self.transforms = T.Compose([
                 # Replace with appropriate transformations
-                T.ToTensor(),
                 T.RandomResizedCrop(image_size, scale=(0.9, 1.0)),
                 T.RandomRotation(degrees=10),
                 T.RandomHorizontalFlip(p=0.5),                      # <------ COMMENT OUT for EMNIST
                 T.RandomPerspective(distortion_scale=0.2, p=0.5),
-                T2.GaussianNoise(sigma=0.01),
+                T.GaussianNoise(sigma=0.01),
             ])
         else:
             """ TODO: Define the validation augmentations """
             self.transforms = T.Compose([
                 # Replace with appropriate transformations
-                T.ToTensor(),
                 T.Resize(image_size)
             ])
 

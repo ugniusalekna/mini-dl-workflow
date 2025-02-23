@@ -1,4 +1,6 @@
 import os
+import time
+from contextlib import contextmanager
 import random
 from types import SimpleNamespace
 import yaml
@@ -59,3 +61,14 @@ def get_device():
     
     print(f"Device selected: {device}")
     return device
+
+
+@contextmanager
+def timer(m=''):
+    ts = time.time()
+    try:
+        yield
+    finally:
+        te = time.time()
+        prefix = f"{m}; " if m else ""
+        print(f"{prefix}Elapsed time: {te - ts:.2f}s")

@@ -13,10 +13,11 @@ def parse_args():
     p.add_argument('--model_path', type=str, required=True)
     p.add_argument('--config_path', type=str, default='./config/config.yaml')
     p.add_argument('--mode', type=str, default='stream', choices=['stream', 'draw'])
+    p.add_argument('--resolution', type=int, default=1080)
     return p.parse_args()
 
 
-def run_stream_mode(model):
+def run_stream_mode(model, frame_size=None):
     with video_capture() as cap:
         while True:
             ok, frame = cap.read()
@@ -25,11 +26,16 @@ def run_stream_mode(model):
             
             frame = crop_square(frame)
             display_frame = cv.flip(frame.copy(), 1)
+            if frame_size:
+                display_frame = cv.resize(display_frame, (frame_size, frame_size))
             
             pred, prob = model(frame, return_prob=True)
-            draw_text(display_frame, text="Press 'q' to quit", font_scale=1.0, pos=(10, 40))
+            
+            draw_text(display_frame, text="Press 'q' to quit", 
+                      font_scale=frame_size/1080, pos=(10, int(frame_size * 0.05)))
             draw_text(display_frame, text=f"Prediction: {pred}; Probability: {prob:.2f}",
-                      font_scale=1.0, pos=(10, 80))
+                      font_scale=frame_size/1080, pos=(10, int(frame_size * 0.1)))
+
             cv.imshow('Inference', display_frame)
             
             if cv.waitKey(1) & 0xFF == ord('q'):
@@ -40,7 +46,7 @@ def run_draw_mode(model, canvas_size=1024):
     canvas = np.zeros((canvas_size, canvas_size, 3), dtype=np.uint8)
     drawing = False
     last_point = None
-    brush_size = 30
+    brush_size = max(1, int(canvas_size / 36))
     erase_mode = False
 
     def draw_callback(event, x, y, flags, param):
@@ -65,9 +71,12 @@ def run_draw_mode(model, canvas_size=1024):
         frame = canvas.copy()
         pred, prob = model(frame, return_prob=True)
         
-        draw_text(frame, text="Press 'q' to quit; 'c' to clear", font_scale=1.0, pos=(10, 30))
-        draw_text(frame, text=f"Prediction: {pred}; Probability: {prob:.2f}", font_scale=1.0, pos=(10, 80))
-        draw_text(frame, text=f"Brush size: {brush_size}; Eraser: {'ON' if erase_mode else 'OFF'}", font_scale=1.0, pos=(10, 130))
+        draw_text(frame, text="Press 'q' to quit; 'c' to clear", 
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.05)))
+        draw_text(frame, text=f"Prediction: {pred}; Probability: {prob:.2f}", 
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.1)))
+        draw_text(frame, text=f"Brush size: {brush_size}; Eraser: {'ON' if erase_mode else 'OFF'}", 
+                  font_scale=canvas_size/1080, pos=(10, int(canvas_size * 0.15)))
         
         cv.imshow(window_name, frame)
         
@@ -99,9 +108,9 @@ def main():
         model = TorchInferenceModel(args.model_path, class_map, image_size=cfg.image_size, device=get_device())
     
     if args.mode == 'stream':
-        run_stream_mode(model)
+        run_stream_mode(model, frame_size=args.resolution)
     elif args.mode == 'draw':
-        run_draw_mode(model)
+        run_draw_mode(model, canvas_size=args.resolution)
 
 
 if __name__ == '__main__':
