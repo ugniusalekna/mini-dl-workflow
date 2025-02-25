@@ -55,6 +55,7 @@ class ImageClassifier(nn.Module):
         """
         Initialize the model layers.
         Args:
+            input_channels (int): Number of channels input image has.
             num_classes (int): Number of output classes.
         """
         super().__init__()

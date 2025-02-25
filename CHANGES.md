@@ -60,3 +60,5 @@ Here are the updates I made after the lecture:
 - added `to_tensor` func to `mdlw/utils/data.py`
 
 - added `timer` context manager to `mdlw/utils/misc.py`
+
+- added a new dataset: `cifar100` -- it has more classes than cifar10 (100 classes), but less images per class, so may be harder to train. you can download it using `download_dataset.py` script, just like all the other

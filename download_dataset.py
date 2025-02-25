@@ -11,6 +11,7 @@ except ImportError:
 
 DATASETS = {
     "cifar10": "1PKd-2Ou5IwXBerbnHEl9DRlB80Aby0W_",
+    "cifar100": "1MWbKrbL1FNbUfY4R2xnbpXxs2xnRgkPb",
     "EMNIST": "1yUqBM-QCyjdpsrJQLCLtf1NxyipNStGo",
     "FER2013": "1pR7US6NuBRcQVFZme5FV6eBr5LrARz2Y",
     "QuickDraw": "13aA23PBAYZDDeGiJl6qFeryVkhQXN34A",

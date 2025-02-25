@@ -14,3 +14,6 @@ __pycache__/
 data*/
 logs/
 runs/
+
+# Jupyter
+data_manip.ipynb
